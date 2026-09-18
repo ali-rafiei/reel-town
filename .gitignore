@@ -1,0 +1,82 @@
+# What belongs in this repository is the source the game is built and deployed from:
+# app/, client/, packages/, server/src/, scripts/, tools/, public/ and the deploy scripts.
+# Everything below is installed, generated, captured or personal, and is kept out.
+
+# Installed dependencies
+/node_modules
+server/node_modules/
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Build output: the client export, the compiled server, and the framework's caches
+/dist/
+/out/
+/outputs/
+/.next/
+/.vinext/
+/.wrangler/
+server/dist/
+next-env.d.ts
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Generated assets and experiments that are not shipped: the models the game loads live
+# in public/models, built by tools/models; anything else Blender or image generation
+# leaves behind stays local.
+/output/
+/work/
+*.blend
+*.blend1
+tools/models/__pycache__/
+__pycache__/
+*.py[cod]
+.venv/
+
+# Local QA: captures, measurements and the scratch scripts that make them
+/evidence/
+/qa/
+/coverage/
+
+# Runtime data: the harbour's database and anything the server writes beside it
+server/data/
+data/
+*.sqlite
+*.sqlite-*
+*.db
+
+# Logs and archives
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.tar.gz
+*.zip
+*.bundle
+
+# Local environment and secrets
+.env*
+/.secrets/
+/.openai/
+*.pem
+*-openrc.sh
+clouds.yaml
+secure.yaml
+
+# Keys, of any kind, ever
+*.key
+*.key.pub
+ssh-key-*
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~

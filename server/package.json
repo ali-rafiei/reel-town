@@ -1,0 +1,1 @@
+{"name":"reel-town-server","private":true,"type":"module","scripts":{"build":"tsc -p tsconfig.json","start":"node --max-old-space-size=256 dist/server/src/index.js"},"dependencies":{"@msgpack/msgpack":"3.1.2","ws":"8.21.3"},"devDependencies":{"@types/node":"22.19.19","@types/ws":"8.18.1","typescript":"5.9.3"}}

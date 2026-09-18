@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Reel Town: the harbour cat, flat and low-poly like the app icon. -->
+  <path d="M12 8 24 22 40 22 52 8 56 26 60 40 48 56 16 56 4 40 8 26Z" fill="#f2a24d"/>
+  <path d="M12 8 24 22 20 30 8 26Z" fill="#e58a3f"/>
+  <path d="M52 8 40 22 44 30 56 26Z" fill="#e58a3f"/>
+  <path d="M16 12 24 22 19 27Z" fill="#e9736a"/>
+  <path d="M48 12 40 22 45 27Z" fill="#e9736a"/>
+  <path d="M14 44 32 58 50 44 32 36Z" fill="#f7d9a8"/>
+  <path d="M28 20 32 30 36 20Z" fill="#d97a3a"/>
+  <ellipse cx="22" cy="36" rx="5" ry="3.4" fill="#243d38"/>
+  <ellipse cx="42" cy="36" rx="5" ry="3.4" fill="#243d38"/>
+  <path d="M16 33 28 33 27 36 17 36Z" fill="#f2a24d"/>
+  <path d="M36 33 48 33 47 36 37 36Z" fill="#f2a24d"/>
+  <path d="M29 42 35 42 32 45Z" fill="#e8657e"/>
+  <path d="M26 47q3 3 6 0 3 3 6 0" fill="none" stroke="#243d38" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M6 44h8M6 48h8M50 44h8M50 48h8" stroke="#d97a3a" stroke-width="2" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,29 @@
+[Unit]
+Description=Reel Town authoritative game server
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+User=reeltown
+Group=reeltown
+WorkingDirectory=/opt/reeltown/current/server
+Environment=NODE_ENV=production
+Environment=PROFILE=small
+Environment=PORT=3001
+Environment=DB_PATH=/var/lib/reeltown/reeltown.sqlite
+ExecStart=/usr/bin/node --max-old-space-size=256 dist/server/src/index.js
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=10
+StateDirectory=reeltown
+StateDirectoryMode=0700
+MemoryHigh=350M
+MemoryMax=400M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/reeltown
+UMask=0077
+[Install]
+WantedBy=multi-user.target
