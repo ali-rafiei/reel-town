@@ -1,5 +1,5 @@
 import { accessories, hats, outfits, type Appearance } from './appearance.js';
-import { BAIT, GEAR } from './gear.js';
+import { BAIT, GEAR, shopPrice } from './gear.js';
 // Cosmetic shop: gold has somewhere to go. Free items keep newcomers expressive; the rest are earned.
 // Tackle (gear, bait) rides the same purchase path so there is one place gold leaves a player.
 export type WearableKind = 'hat' | 'outfit' | 'accessory';
@@ -8,9 +8,9 @@ export type CosmeticKind = WearableKind | 'gear' | 'bait';
 // player pulls off the feat named in FEATS.
 export const EARNED = -1;
 export const cosmeticPrices: Record<CosmeticKind, Record<string, number>> = {
-  hat: { none: 0, beanie: 60, bucket: 120, cone: 90, party: 100, flower: 200, captain: 320, beret: 140, straw: EARNED },
-  outfit: { tee: 0, hoodie: 110, striped: 130, overalls: 160, raincoat: 220, cardigan: 180, sweater: 150, vest: 200 },
-  accessory: { none: 0, glasses: 80, scarf: 120, backpack: 260, satchel: 180, bandana: EARNED, bow: 90, headphones: EARNED, lantern: 280 },
+  hat: { none: 0, beanie: shopPrice(60), bucket: shopPrice(120), cone: shopPrice(90), party: shopPrice(100), flower: shopPrice(200), captain: shopPrice(320), beret: shopPrice(140), straw: EARNED },
+  outfit: { tee: 0, hoodie: shopPrice(110), striped: shopPrice(130), overalls: shopPrice(160), raincoat: shopPrice(220), cardigan: shopPrice(180), sweater: shopPrice(150), vest: shopPrice(200) },
+  accessory: { none: 0, glasses: shopPrice(80), scarf: shopPrice(120), backpack: shopPrice(260), satchel: shopPrice(180), bandana: EARNED, bow: shopPrice(90), headphones: EARNED, lantern: shopPrice(280) },
   gear: Object.fromEntries(Object.entries(GEAR).map(([id, g]) => [id, g.price])),
   bait: { [BAIT.id]: BAIT.price },
 };

@@ -9,9 +9,9 @@ test('free items are always owned and paid items must be bought with enough gold
   assert.ok(ownsCosmetic(owned, 'hat', 'none'));
   assert.ok(!ownsCosmetic(owned, 'hat', 'captain'));
   assert.deepEqual(purchase(100, owned, 'hat', 'captain'), { ok: false, reason: `You need ${cosmeticPrices.hat.captain - 100} more gold for that.` });
-  assert.deepEqual(purchase(400, owned, 'hat', 'captain'), { ok: true, price: cosmeticPrices.hat.captain, consumable: false });
+  assert.deepEqual(purchase(1000, owned, 'hat', 'captain'), { ok: true, price: cosmeticPrices.hat.captain, consumable: false });
   assert.ok(ownsCosmetic(owned, 'hat', 'captain'));
-  assert.equal(purchase(400, owned, 'hat', 'captain').ok, false, 'cannot buy twice');
+  assert.equal(purchase(1000, owned, 'hat', 'captain').ok, false, 'cannot buy twice');
   assert.equal(purchase(400, owned, 'hat', 'crown').ok, false, 'unknown items are refused');
   assert.equal(purchase(400, owned, 'species', 'dragon').ok, false, 'unknown kinds are refused');
   assert.equal(purchase(400, owned, 'hat', 'none').ok, false, 'free items are not sold');

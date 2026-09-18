@@ -50,7 +50,7 @@ Server → client messages are MessagePack: `welcome` (session number `n`, recov
 
 ### Economy bounds
 
-Fish sell for 12–1000 gold (perfect catches double); cosmetics cost 60–320 gold once, three are earned by feats, gear costs 250–800 once and lucky bait 90 per cast. Contest rewards are at most 30 gold per round and eight rewarded rounds per hour per player. Every pickup game pays score over a divisor, capped per run (8–40 gold) and per rolling hour (6–8 rewarded runs), from one table in `packages/shared/games.ts`. Shells pay 5, a watering 3, the dog 5, a challenge 20, the daily pin 15, each once a day. Rarity multipliers from weather, night and distance are capped per rarity so legendaries stay under 8% of catches even in ideal conditions; lucky bait raises the cap for one cast and legendaries still stay under 20%.
+Fish sell for 12–1000 gold (perfect catches double); shop prices use a 2.5× economy multiplier, making paid cosmetics 150–800 gold, gear 625–2,000, and lucky bait 225 per cast. Free starter items stay free and three cosmetics are earned by feats. Contest rewards are at most 30 gold per round and eight rewarded rounds per hour per player. Every pickup game pays score over a divisor, capped per run (8–40 gold) and per rolling hour (6–8 rewarded runs), from one table in `packages/shared/games.ts`. Shells pay 5, a watering 3, the dog 5, a challenge 20, the daily pin 15, each once a day. Rarity multipliers from weather, night and distance are capped per rarity so legendaries stay under 8% of catches even in ideal conditions; lucky bait raises the cap for one cast and legendaries still stay under 20%.
 
 ## Development
 

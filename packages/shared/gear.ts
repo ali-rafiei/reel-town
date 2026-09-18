@@ -2,13 +2,15 @@ import { NO_MODS, type ReelMods } from './game.js';
 // Tackle sold at the Bait Shop. Gear is owned for good and eases every reel a little;
 // bait is used up by the next cast and only tilts what bites.
 export type GearId = 'sturdyRod' | 'silkLine' | 'deepReel';
+export const SHOP_PRICE_MULTIPLIER = 2.5;
+export const shopPrice = (basePrice: number) => Math.round(basePrice * SHOP_PRICE_MULTIPLIER);
 export const GEAR: Record<GearId, { name: string; price: number; blurb: string }> = {
-  sturdyRod: { name: 'Sturdy rod', price: 250, blurb: 'Wider catch bar.' },
-  silkLine: { name: 'Silk line', price: 450, blurb: 'Slower to lose the fish.' },
-  deepReel: { name: 'Deep reel', price: 800, blurb: 'Reels in faster.' },
+  sturdyRod: { name: 'Sturdy rod', price: shopPrice(250), blurb: 'Wider catch bar.' },
+  silkLine: { name: 'Silk line', price: shopPrice(450), blurb: 'Slower to lose the fish.' },
+  deepReel: { name: 'Deep reel', price: shopPrice(800), blurb: 'Reels in faster.' },
 };
 export const GEAR_IDS = Object.keys(GEAR) as GearId[];
-export const BAIT = { id: 'luckyBait', name: 'Lucky bait', price: 90, blurb: 'Better odds on your next cast. One at a time.' };
+export const BAIT = { id: 'luckyBait', name: 'Lucky bait', price: shopPrice(90), blurb: 'Better odds on your next cast. One at a time.' };
 export const GEAR_EFFECT = { halfWidth: 0.03, lossScale: 0.8, gainScale: 1.2 };
 export function ownsGear(owned: Record<string, number>, id: GearId) {
   return !!owned[`gear:${id}`];

@@ -8,6 +8,7 @@
 import WebSocket from '../server/node_modules/ws/wrapper.mjs';
 import { decode } from '../server/node_modules/@msgpack/msgpack/dist.esm/index.mjs';
 import { fishCatalog } from '../server/dist/packages/shared/game.js';
+import { BAIT, GEAR } from '../server/dist/packages/shared/gear.js';
 import { LANDMARKS } from '../server/dist/packages/shared/landmarks.js';
 import { PIER } from '../server/dist/packages/shared/layout.js';
 const [url = 'ws://127.0.0.1:3101', dbPath] = process.argv.slice(2);
@@ -157,13 +158,13 @@ if (dbPath) {
   check('the bot has its gold', w.coins === 2000, `${w.coins}`);
   b.send({ type: 'buy', kind: 'gear', item: 'sturdyRod' });
   const bought = await b.next((m) => m.type === 'inventory' && m.bought);
-  check('a rod is bought once', !!bought && bought.bought.item === 'sturdyRod' && bought.coins === 1750 && bought.stats.owned['gear:sturdyRod'] === 1, bought && `coins ${bought.coins}`);
+  check('a rod is bought once', !!bought && bought.bought.item === 'sturdyRod' && bought.coins === 2000 - GEAR.sturdyRod.price && bought.stats.owned['gear:sturdyRod'] === 1, bought && `coins ${bought.coins}`);
   b.send({ type: 'buy', kind: 'gear', item: 'sturdyRod' });
   const twice = await b.next((m) => m.type === 'error', 3000);
   check('a rod cannot be bought twice', !!twice && /already/.test(twice.message), twice && twice.message);
   b.send({ type: 'buy', kind: 'bait', item: 'luckyBait' });
   const bait = await b.next((m) => m.type === 'inventory' && m.bought);
-  check('bait goes on the hook', !!bait && bait.stats.bait === 1 && bait.coins === 1660, bait && `coins ${bait.coins}, bait ${bait.stats.bait}`);
+  check('bait goes on the hook', !!bait && bait.stats.bait === 1 && bait.coins === 2000 - GEAR.sturdyRod.price - BAIT.price, bait && `coins ${bait.coins}, bait ${bait.stats.bait}`);
   b.send({ type: 'buy', kind: 'bait', item: 'luckyBait' });
   const again = await b.next((m) => m.type === 'error', 3000);
   check('one bait at a time', !!again && /already have bait/.test(again.message), again && again.message);
