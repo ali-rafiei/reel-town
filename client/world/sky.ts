@@ -206,14 +206,16 @@ void main(){
     glassPieces.push(g);
   };
   const lights: PointLight[] = [];
+  // Every lantern gets its light built, whatever quality the device started on; the
+  // setting only decides how many are shown. Building them on demand meant a phone that
+  // opened on low had none to turn on later, so raising quality left the pier dark.
   for (const lantern of PIER_LANTERNS) {
     glassAt(lantern.x, PIER_LANTERN.glassY, lantern.z, 0.36, 0.38, 0.36);
-    if (lights.length < lanternLights) {
-      const light = new PointLight('#ffb85c', 0, 11, 1.6);
-      light.position.set(lantern.x, PIER_LANTERN.lightY, lantern.z);
-      scene.add(light);
-      lights.push(light);
-    }
+    const light = new PointLight('#ffb85c', 0, 11, 1.6);
+    light.position.set(lantern.x, PIER_LANTERN.lightY, lantern.z);
+    light.visible = lights.length < lanternLights;
+    scene.add(light);
+    lights.push(light);
   }
   const house = layoutProps.house,
     houseY = GROUND_Y + groundHeight(house.x, house.z),
