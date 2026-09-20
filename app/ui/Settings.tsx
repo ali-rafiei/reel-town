@@ -95,7 +95,7 @@ export function Settings({
       <div className="field">
         <span className="label">
           Play as someone else
-          <small>{confirmForget ? 'Copy your recovery code first — you will need it to come back to this character.' : 'This browser stops opening straight into this character'}</small>
+          <small>{confirmForget ? 'Copy your recovery code first. You will need it to come back to this character.' : 'This browser stops opening straight into this character'}</small>
         </span>
         <Button tone={confirmForget ? 'primary' : undefined} onClick={() => (confirmForget ? onForget() : setConfirmForget(true))}>
           {confirmForget ? 'Confirm' : 'Sign out'}

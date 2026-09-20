@@ -9,7 +9,7 @@ import { GAME_IDS, type GameId } from '../../packages/shared/games';
 import { SHELL_ART, art } from '../../client/art';
 export type Fish = { name: string; size: number; price: number; perfect?: boolean };
 type Tab = 'bag' | 'guide' | 'journal' | 'records';
-const GAME_NAMES: Record<GameId, string> = { sorting: 'Sort the catch', tidepool: 'Tidepool tidy', orchard: 'Orchard catch', signals: 'Lighthouse signals', buoy: 'Buoy run', four: 'Dockside Four' };
+const GAME_NAMES: Record<GameId, string> = { sorting: 'Sort the catch', tidepool: 'Tidepool tidy', orchard: 'Orchard catch', signals: 'Lighthouse signals', buoy: 'Buoy run', four: 'Dockside Four', rps: 'Rock paper scissors' };
 const RARITIES: Rarity[] = ['Common', 'Uncommon', 'Rare', 'Legendary'];
 export function TackleBox({ inventory, coins, stats, onClose, nearShop, onSell }: { inventory: Fish[]; coins: number; stats: Stats; onClose: () => void; nearShop: boolean; onSell: () => void }) {
   const [tab, setTab] = useState<Tab>('bag');
@@ -186,7 +186,7 @@ export function TackleBox({ inventory, coins, stats, onClose, nearShop, onSell }
           <ul className="list">
             {GAME_IDS.map((id) => {
               const g = stats.games[id];
-              const value = id === 'four' ? `${g.wins} won` : id === 'buoy' ? (g.bestTimeMs ? `${(g.bestTimeMs / 1000).toFixed(1)} s` : '—') : g.best ? `${g.best} pts` : '—';
+              const value = id === 'four' ? `${g.wins} won` : id === 'buoy' ? (g.bestTimeMs ? `${(g.bestTimeMs / 1000).toFixed(1)} s` : '-') : g.best ? `${g.best} pts` : '-';
               return (
                 <li className="row" key={id}>
                   <span className="name">

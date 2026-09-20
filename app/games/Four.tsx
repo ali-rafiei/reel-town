@@ -139,10 +139,10 @@ export function FourPanel({
         <>
           <div className="fourseats">
             <span className={`seat p1 ${view.turn === 0 && view.phase === 'playing' ? 'turn' : ''}`}>
-              <i /> {view.seats[0] ?? '—'}
+              <i /> {view.seats[0] ?? '-'}
             </span>
             <span className={`seat p2 ${view.turn === 1 && view.phase === 'playing' ? 'turn' : ''}`}>
-              <i /> {view.seats[1] ?? '—'}
+              <i /> {view.seats[1] ?? '-'}
             </span>
           </div>
           <div className="fourboard" role="grid" aria-label="Board">
