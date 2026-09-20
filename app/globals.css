@@ -48,6 +48,10 @@
 html {
   font-size: 100%;
 }
+html,
+body {
+  height: 100%;
+}
 body {
   margin: 0;
   color: var(--ink);
@@ -83,9 +87,11 @@ button:disabled {
   white-space: nowrap;
 }
 main {
-  height: 100dvh;
+  /* Fixed to the layout viewport, not 100dvh: an installed iOS web app resolves dvh
+     without the home-indicator inset, which left a band of body behind the HUD. */
+  position: fixed;
+  inset: 0;
   overflow: hidden;
-  position: relative;
 }
 .world {
   position: absolute;
@@ -2235,6 +2241,134 @@ button.pill:hover {
 }
 .signalstatus {
   text-align: center;
+}
+/* The games stand: two sides with their round pips, the pick row, and the reveal. */
+.rpsseats {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.rpsseats .seat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+}
+.rpsseats .seat.ready {
+  border-color: var(--gold);
+  background: var(--paper-2);
+}
+.rpsseats .seat img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+.rpsseats .pips {
+  display: inline-flex;
+  gap: 3px;
+}
+.rpsseats .pips i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+}
+.rpsseats .pips i.won {
+  background: var(--gold);
+}
+/* The round clock, draining left to right so the last second is unmistakable. */
+.rpsclock {
+  height: 10px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper-2);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.rpsclock span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s linear;
+}
+.rpspick {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.rpspick .piece {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--ink);
+  min-height: var(--control);
+}
+.rpspick .piece img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+.rpspick .piece[aria-pressed='true'] {
+  background: var(--gold);
+  box-shadow: var(--shadow);
+}
+.rpspick .piece:disabled {
+  opacity: 0.55;
+}
+.rpspick .piece kbd {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.rpsreveal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.rpsreveal .shown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius);
+  font-weight: 800;
+  font-size: 13px;
+}
+.rpsreveal .shown.won {
+  border-style: solid;
+  background: var(--paper-2);
+  box-shadow: var(--shadow);
+}
+.rpsreveal .shown img,
+.rpsreveal .shown svg {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+.muted.small {
+  font-size: 12px;
 }
 .fourseats {
   display: flex;

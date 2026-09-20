@@ -2,9 +2,10 @@
 import type { GameEnd, GameId, GameStart, GameUpdate } from '../../packages/shared/games';
 import { MinigameShell } from '../ui/MinigameShell';
 import { FourPanel, type FourView } from './Four';
+import { RpsPanel, type RpsView } from './Rps';
 import { gameById } from './registry';
-// Looks up the game and puts its component inside the shared shell. Dockside Four is a
-// table rather than a run, so it brings its own panel.
+// Looks up the game and puts its component inside the shared shell. Dockside Four and the
+// rock paper scissors stand are places rather than runs, so they bring their own panels.
 export function GameHost({
   game,
   run,
@@ -17,6 +18,7 @@ export function GameHost({
   subscribe,
   onClose,
   fourView,
+  rpsView,
   setBusy,
   coins,
 }: {
@@ -31,10 +33,12 @@ export function GameHost({
   subscribe: (fn: (update: GameUpdate) => void) => () => void;
   onClose: () => void;
   fourView: FourView | null;
+  rpsView: RpsView | null;
   setBusy: (busy: boolean) => void;
   coins: number;
 }) {
   if (game === 'four') return <FourPanel view={fourView} near={near} wins={best} coins={coins} serverOffset={serverOffset} send={send} setBusy={setBusy} onClose={onClose} />;
+  if (game === 'rps') return <RpsPanel view={rpsView} near={near} wins={best} coins={coins} serverOffset={serverOffset} send={send} setBusy={setBusy} onClose={onClose} />;
   const def = gameById(game);
   if (!def) return null;
   const Game = def.component;

@@ -42,7 +42,9 @@ import {
   BUOYS,
   boatable,
   inCastZone,
+  BENCH_RADIUS,
 } from '../server/dist/packages/shared/layout.js';
+import { LANDMARKS } from '../server/dist/packages/shared/landmarks.js';
 import { stepMovement, createMoveState, MOVE } from '../server/dist/packages/shared/movement.js';
 import { castLanding } from '../server/dist/packages/shared/game.js';
 import { PIN_SPOTS } from '../server/dist/server/src/pins.js';
@@ -243,4 +245,26 @@ test('a player can walk from the spawn down the pier road and onto the deck with
   for (let i = 0; i < 30 * 8; i++) stepMovement(s, 0, 1, MOVE.dt);
   assert.ok(s.z > PIER.crossStart, `reached z ${s.z.toFixed(1)}`);
   assert.ok(onPier(s.x, s.z));
+});
+
+test("the games podium's prompt clears every other prompt on the island", () => {
+  // Two prompts over one patch of ground means whichever loses the HUD's ordering can
+  // never be reached from inside the overlap. Several older pairs on this island do
+  // overlap (the benches by the picnic table, the orchard and the garden); the podium
+  // was placed so that it adds no more.
+  const others = [
+    ...Object.entries(LANDMARKS)
+      .filter(([id]) => id !== 'rps')
+      .map(([id, m]) => ({ id, x: m.x, z: m.z, r: m.radius })),
+    ...DRAWING_BOARDS.map((b, i) => ({ id: `board${i}`, x: b.x, z: b.z, r: b.radius })),
+    ...props.benches.map((b, i) => ({ id: `bench${i}`, x: b.x, z: b.z, r: BENCH_RADIUS })),
+  ];
+  const podium = LANDMARKS.rps;
+  const clashes = others
+    .map((o) => ({ id: o.id, gap: Math.hypot(o.x - podium.x, o.z - podium.z) - (o.r + podium.radius) }))
+    .filter((o) => o.gap < 0)
+    .map((o) => `${o.id} overlaps by ${(-o.gap).toFixed(2)}`);
+  assert.deepEqual(clashes, [], 'the podium must not share ground with another prompt');
+  // And it must be somewhere a player can actually stand to use it.
+  assert.ok(walkable(podium.x, podium.z + 1.4), 'there is ground to stand on in front of it');
 });

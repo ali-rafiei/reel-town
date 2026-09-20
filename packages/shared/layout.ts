@@ -157,6 +157,11 @@ export const DRAWING_BOARDS: Array<Landmark & { heading: number }> = [
   { x: 0, z: -2, radius: 2.6, heading: 0 },
 ];
 export const NOTICE_BOARD: Landmark = { x: -3.5, z: 14, radius: 1.8 };
+// The games podium: a wooden lectern with a round top, standing beside the path up to
+// the picnic clearing so you pass it on the way to the picnic table. Its prompt radius
+// clears every other prompt on the island — see the island tests — because two prompts
+// over one patch of ground means one of them can never be reached.
+export const RPS_PODIUM: Landmark & { heading: number } = { x: 1.8, z: -8.2, radius: 2.2, heading: Math.atan2(-1.8, 13.2) };
 // Home: the bait shop inside its garden fence, gate on the plaza side.
 export const GARDEN_FENCE = { minX: -18.5, maxX: -9.5, minZ: -3.5, maxZ: 4.5, gate: { x: -14, halfWidth: 1.4 } };
 export const DOG: Landmark = { x: -10.5, z: 7.4, radius: 1.6 };
@@ -256,6 +261,7 @@ const ACTIVITY_SPOTS: Blocker[] = [
   { x: POND_DOCK.x, z: POND_DOCK.z, r: 3.5 },
   ...props.benches.map((b) => ({ x: b.x, z: b.z, r: 3.5 })),
   ...DRAWING_BOARDS.map((b) => ({ x: b.x, z: b.z, r: 3.6 })),
+  { x: RPS_PODIUM.x, z: RPS_PODIUM.z, r: 3.6 },
   ...GARDEN_BEDS.map((b) => ({ x: (b.x1 + b.x2) / 2, z: (b.z1 + b.z2) / 2, r: 3 })),
 ];
 const KEEP_CLEAR: Blocker[] = [
@@ -278,6 +284,7 @@ const KEEP_CLEAR: Blocker[] = [
   { x: THREADS_DOOR.x, z: THREADS_DOOR.z, r: 3 },
   { x: props.house.x, z: props.house.z + 3.2, r: 3 },
   ...DRAWING_BOARDS.map((b) => ({ x: b.x, z: b.z, r: 2.8 })),
+  { x: RPS_PODIUM.x, z: RPS_PODIUM.z, r: 2.8 },
 ];
 export const TREE_COUNT = 38;
 // Wild trees are placed by a fixed linear congruential generator, so the server and the
@@ -318,6 +325,8 @@ export const blockers: Blocker[] = [
   ...STUMPS,
   CAMPFIRE,
   ...TIDE_ROCKS,
+  // The podium is a post: you walk round it, not through it.
+  { x: RPS_PODIUM.x, z: RPS_PODIUM.z, r: 0.62 },
   ...trees.map((t) => ({ x: t.x, z: t.z, r: 0.55 * t.scale })),
 ];
 // A drawing board is a wide, thin panel: it stops you walking through it without walling

@@ -29,6 +29,7 @@ import { RunPill } from './games/RunPill';
 import { GAMES } from './games/registry';
 import type { GameEnd, GameId, GameStart, GameUpdate } from '../packages/shared/games';
 import type { FourView } from './games/Four';
+import type { RpsView } from './games/Rps';
 import { LANDMARKS } from '../packages/shared/landmarks';
 import { DrawingBoard } from './ui/DrawingBoard';
 import { BOARD, authorTag, type Stroke } from '../packages/shared/boards';
@@ -40,8 +41,8 @@ import { DevPanel } from './ui/DevPanel';
 import type { AdminState } from '../packages/shared/admin';
 import { harbourphone } from '../client/audio';
 type PanelName = 'box' | 'threads' | 'settings' | 'shop' | 'contest' | 'game' | 'board' | 'notice' | 'help' | 'players' | 'dev' | null;
-type Near = { shop: boolean; threads: boolean; contestSign: boolean; bench: boolean; seated: boolean; four: boolean; board: number; garden: boolean; dog: boolean; notice: boolean; games: Record<GameId, boolean> };
-const NO_NEAR: Near = { shop: false, threads: false, contestSign: false, bench: false, seated: false, four: false, board: -1, garden: false, dog: false, notice: false, games: {} as Record<GameId, boolean> };
+type Near = { shop: boolean; threads: boolean; contestSign: boolean; bench: boolean; seated: boolean; four: boolean; rps: boolean; board: number; garden: boolean; dog: boolean; notice: boolean; games: Record<GameId, boolean> };
+const NO_NEAR: Near = { shop: false, threads: false, contestSign: false, bench: false, seated: false, four: false, rps: false, board: -1, garden: false, dog: false, notice: false, games: {} as Record<GameId, boolean> };
 function serverUrl() {
   if (typeof location !== 'undefined' && ['localhost', '127.0.0.1'].includes(location.hostname)) {
     const override = localStorage.getItem('reeltown-server');
@@ -113,6 +114,7 @@ export default function Home() {
     gameListeners = useRef(new Set<(m: GameUpdate) => void>()),
     gameActive = useRef(false),
     fourSeated = useRef(false),
+    rpsSeated = useRef(false),
     catchTimer = useRef(0);
   const { toasts, push: toast, dismiss } = useToasts();
   const [name, setName] = useState(''),
@@ -151,7 +153,9 @@ export default function Home() {
     [run, setRun] = useState<GameStart | null>(null),
     [runEnd, setRunEnd] = useState<GameEnd | null>(null),
     [fourView, setFourView] = useState<FourView | null>(null),
+    [rpsView, setRpsView] = useState<RpsView | null>(null),
     [table, setTable] = useState<[number, number, number]>([0, 0, 0]),
+    [stand, setStand] = useState<[number, number, number]>([0, 0, 0]),
     [selling, setSelling] = useState(false),
     [shopTab, setShopTab] = useState<'sell' | 'tackle'>('sell'),
     [settings, setSettings] = useState<SettingsState>(() => ({ quality: 'auto', qualityLabel: '', crisp: false, reduceMotion: false, largeText: false, showGold: false, sound: true, fullscreen: false }));
@@ -240,6 +244,7 @@ export default function Home() {
     else if (n.threads) setPanel((p) => (p === 'threads' ? null : 'threads'));
     else if (game) openGame(game.id);
     else if (n.four) openGame('four');
+    else if (n.rps) openGame('rps');
     else if (n.board >= 0) {
       setBoard(n.board);
       setPanel((p) => (p === 'board' ? null : 'board'));
@@ -331,6 +336,10 @@ export default function Home() {
           send({ type: 'game', game: 'four', action: 'leave' });
           setFourView(null);
         }
+        if (rpsSeated.current) {
+          send({ type: 'game', game: 'rps', action: 'leave' });
+          setRpsView(null);
+        }
         setPanel(null);
         setEmotesOpen(false);
         setCaught(null);
@@ -371,11 +380,13 @@ export default function Home() {
       const games = {} as Record<GameId, boolean>;
       for (const g of GAMES) games[g.id] = (d as Record<string, number>)[g.id] < g.landmark.radius;
       const nearBoard = d.board >= 0 && d.boardDistance < DRAWING_BOARDS[d.board].radius ? d.board : -1;
-      const next: Near = { shop: d.shop < SHOP_DOOR.radius, threads: d.threads < THREADS_DOOR.radius, contestSign: d.contestSign < CONTEST_SIGN.radius, bench: d.bench < BENCH_RADIUS, seated: world.current?.selfEmote() === 'sit', four: d.four < LANDMARKS.four.radius, board: nearBoard, garden: d.garden < LANDMARKS.garden.radius, dog: d.dog < LANDMARKS.dog.radius, notice: d.notice < LANDMARKS.notice.radius, games };
+      const next: Near = { shop: d.shop < SHOP_DOOR.radius, threads: d.threads < THREADS_DOOR.radius, contestSign: d.contestSign < CONTEST_SIGN.radius, bench: d.bench < BENCH_RADIUS, seated: world.current?.selfEmote() === 'sit', four: d.four < LANDMARKS.four.radius, rps: d.rps < LANDMARKS.rps.radius, board: nearBoard, garden: d.garden < LANDMARKS.garden.radius, dog: d.dog < LANDMARKS.dog.radius, notice: d.notice < LANDMARKS.notice.radius, games };
       nearRef.current = next;
       setNear((prev) => ((Object.keys(next) as Array<keyof Near>).every((k) => (k === 'games' ? GAMES.every((g) => prev.games[g.id] === next.games[g.id]) : prev[k] === next[k])) ? prev : next));
       const t = w.tables()[0] ?? [0, 0, 0];
       setTable((prev) => (prev[0] === t[0] && prev[1] === t[1] && prev[2] === t[2] ? prev : t));
+      const st = w.tables()[1] ?? [0, 0, 0];
+      setStand((prev) => (prev[0] === st[0] && prev[1] === st[1] && prev[2] === st[2] ? prev : st));
       const c = w.contest();
       const key = c ? `${c.phase}:${c.endsAt}:${c.players.map((row) => row.join('/')).join(',')}` : '';
       if (key !== lastContestKey.current) {
@@ -496,6 +507,18 @@ export default function Home() {
             toast(`Dockside Four · you ${outcome === 'win' ? 'won' : 'drew'} · +${m.gold} gold`, 'gold', 6000);
             world.current?.effect({ kind: 'gold', n: selfN.current, waterX: 0, waterZ: 0, score: m.gold });
           } else if (!m.quit) toast(outcome === 'win' ? 'Dockside Four · you won!' : outcome === 'draw' ? 'Dockside Four · a draw.' : 'Dockside Four · better luck next time.', 'info', 4000);
+        }
+        return;
+      }
+      if (m.game === 'rps') {
+        // The stand pushes whole views; a finished match arrives as an end with the outcome.
+        if (m.event === 'update') setRpsView(m.view as RpsView);
+        else if (m.event === 'end') {
+          const outcome = m.outcome as string;
+          if (m.gold > 0) {
+            toast(`Rock paper scissors · you ${outcome === 'win' ? 'won' : 'drew'} · +${m.gold} gold`, 'gold', 6000);
+            world.current?.effect({ kind: 'gold', n: selfN.current, waterX: 0, waterZ: 0, score: m.gold });
+          } else if (!m.quit) toast(outcome === 'win' ? 'Rock paper scissors · you won!' : outcome === 'draw' ? 'Rock paper scissors · a dead heat.' : 'Rock paper scissors · better luck next time.', 'info', 4000);
         }
         return;
       }
@@ -702,20 +725,23 @@ export default function Home() {
       setRunEnd(null);
       setActiveGame(null);
       setFourView(null);
+      setRpsView(null);
       world.current?.setBusy(false);
       world.current?.setNextBuoy(-1);
       world.current?.setSelf(0);
     });
     c.connect(serverUrl(), { name: joinName, color: appearance.color, appearance, token: recovery || (freshGuest.current ? undefined : sessionStorage.getItem('reeltown-token') || localStorage.getItem('reeltown-token') || undefined) });
   }
-  gameActive.current = (!!run && !GAMES.find((g) => g.id === run.game)?.free) || (!!fourView && fourView.you >= 0 && fourView.phase === 'playing');
+  gameActive.current = (!!run && !GAMES.find((g) => g.id === run.game)?.free) || (!!fourView && fourView.you >= 0 && fourView.phase === 'playing') || (!!rpsView && rpsView.you >= 0 && (rpsView.phase === 'picking' || rpsView.phase === 'reveal'));
   const nearGame = GAMES.find((g) => near.games[g.id]);
   const tablePrompt = table[0] === 2 ? (table[1] === selfN.current || table[2] === selfN.current ? 'Dockside Four · your game' : 'Dockside Four · watch the game') : table[0] === 1 ? (table[1] === selfN.current || table[2] === selfN.current ? 'Dockside Four · your table' : 'Dockside Four · one seat free') : 'Dockside Four · take a seat';
+  const standPrompt = stand[0] >= 2 && stand[0] <= 3 ? (stand[1] === selfN.current || stand[2] === selfN.current ? 'Rock paper scissors · your match' : 'Rock paper scissors · watch the match') : stand[0] === 1 ? (stand[1] === selfN.current || stand[2] === selfN.current ? 'Rock paper scissors · waiting for a challenger' : 'Rock paper scissors · take them on') : 'Rock paper scissors · step up';
   const contestJoined = !!contest?.players.some((row) => row[0] === selfN.current);
   // While a run holds the player still, or they sit at the picnic table, the walking and
   // fishing controls do nothing, so they leave the screen; the boat keeps the joystick.
   fourSeated.current = !!fourView && fourView.you >= 0 && fourView.phase !== 'playing';
-  const pinned = (!!run && run.game !== 'buoy') || (!!fourView && fourView.you >= 0);
+  rpsSeated.current = !!rpsView && rpsView.you >= 0 && rpsView.phase !== 'picking' && rpsView.phase !== 'reveal';
+  const pinned = (!!run && run.game !== 'buoy') || (!!fourView && fourView.you >= 0) || (!!rpsView && rpsView.you >= 0);
   const canSteer = !pinned || run?.game === 'buoy';
   const primaryLabel = charging ? 'Release!' : fishingPhase === 'bite' ? 'Hook it!' : fishingPhase === 'reeling' ? 'Hold to reel' : fishingPhase === 'waiting' ? 'Waiting…' : fishingPhase === 'contest' ? 'Nice throw' : 'Cast';
   const primaryIcon = fishingPhase === 'bite' ? 'hook' : fishingPhase === 'reeling' ? 'hook' : fishingPhase === 'waiting' ? 'hourglass' : 'rod';
@@ -731,6 +757,10 @@ export default function Home() {
         ? panel === 'game' && activeGame === 'four'
           ? null
           : { icon: 'grid' as const, text: tablePrompt }
+        : near.rps
+        ? panel === 'game' && activeGame === 'rps'
+          ? null
+          : { icon: 'rps' as const, text: standPrompt }
         : near.board >= 0 && panel !== 'board'
         ? { icon: 'pixel' as const, text: world.current?.boards.lockOf(near.board) ? 'Drawing board · watch' : 'Drawing board · draw something' }
         : near.notice && panel !== 'notice'
@@ -939,11 +969,12 @@ export default function Home() {
                   game={activeGame}
                   run={run && run.game === activeGame ? run : null}
                   end={runEnd && runEnd.game === activeGame ? runEnd : null}
-                  best={activeGame === 'four' ? stats.games.four?.wins ?? 0 : stats.games[activeGame]?.best ?? 0}
-                  near={activeGame === 'four' ? near.four : !!near.games[activeGame]}
+                  best={activeGame === 'four' ? stats.games.four?.wins ?? 0 : activeGame === 'rps' ? stats.games.rps?.wins ?? 0 : stats.games[activeGame]?.best ?? 0}
+                  near={activeGame === 'four' ? near.four : activeGame === 'rps' ? near.rps : !!near.games[activeGame]}
                   coarse={coarse}
                   serverOffset={serverOffset.current}
                   fourView={fourView}
+                  rpsView={rpsView}
                   coins={coins}
                   setBusy={(busy) => world.current?.setBusy(busy)}
                   send={send}
@@ -955,6 +986,7 @@ export default function Home() {
                     setPanel(null);
                     setRunEnd(null);
                     if (activeGame === 'four') setFourView(null);
+                    if (activeGame === 'rps') setRpsView(null);
                   }}
                 />
               )}

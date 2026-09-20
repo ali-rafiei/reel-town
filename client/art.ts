@@ -1,7 +1,7 @@
 // The painted 2D art pack: sprites cut from the concept sheets in evidence/gpt/sheets and
 // shipped under public/art/<sheet>/<item>.png. Everything the UI draws from it goes through
 // here, so a renamed file breaks in one place.
-export type ArtSheet = 'ui-icons' | 'fishing-shop' | 'minigames' | 'shells-tidepool' | 'world-billboards' | 'portraits-emotes' | 'cosmetics';
+export type ArtSheet = 'ui-icons' | 'fishing-shop' | 'minigames' | 'shells-tidepool' | 'world-billboards' | 'portraits-emotes' | 'cosmetics' | 'rps';
 export function art(sheet: ArtSheet, item: string) {
   return `${import.meta.env.BASE_URL}art/${sheet}/${item}.png`;
 }

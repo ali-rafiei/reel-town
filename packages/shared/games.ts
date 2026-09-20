@@ -1,7 +1,7 @@
 import { rewardsInLastHour } from './stats.js';
 // Every pickup game on the island shares one identity table, one stats shape and one
 // reward curve, so a new game is a module and a row here rather than a new economy.
-export const GAME_IDS = ['sorting', 'tidepool', 'orchard', 'signals', 'buoy', 'four'] as const;
+export const GAME_IDS = ['sorting', 'tidepool', 'orchard', 'signals', 'buoy', 'four', 'rps'] as const;
 export type GameId = (typeof GAME_IDS)[number];
 export const isGameId = (v: unknown): v is GameId => typeof v === 'string' && (GAME_IDS as readonly string[]).includes(v);
 export type GameStats = { best: number; plays: number; wins: number; bestTimeMs: number; rewardedAt: number[] };
@@ -16,6 +16,7 @@ export const GAME_REWARDS: Record<GameId, { divisor: number; maxPerRun: number; 
   signals: { divisor: 1, maxPerRun: 20, maxRunsPerHour: 6, brag: 16 },
   buoy: { divisor: 4, maxPerRun: 25, maxRunsPerHour: 6, brag: 60 },
   four: { divisor: 1, maxPerRun: 8, maxRunsPerHour: 6, brag: 0 },
+  rps: { divisor: 1, maxPerRun: 8, maxRunsPerHour: 6, brag: 0 },
 };
 export function gameReward(game: GameId, score: number, rewardedAt: number[], now: number) {
   const rule = GAME_REWARDS[game];

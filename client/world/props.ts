@@ -20,7 +20,7 @@ import {
   TorusGeometry,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { BUOYS, CAMPFIRE, CONTEST_SIGN, DECK_STAND_Y, DOG, GROUND_Y, ORCHARD, PIER, POND, ROWBOAT, SHORE, groundHeight, onPath, props as layoutProps, shoreDistance, shoreRadius, walkable } from '../../packages/shared/layout';
+import { BUOYS, CAMPFIRE, CONTEST_SIGN, DECK_STAND_Y, DOG, GROUND_Y, ORCHARD, PIER, POND, ROWBOAT, RPS_PODIUM, SHORE, groundHeight, onPath, props as layoutProps, shoreDistance, shoreRadius, walkable } from '../../packages/shared/layout';
 import { GARDEN_PLOTS, SHELL } from '../../packages/shared/activities';
 import { beamHeading } from '../../packages/shared/lighthouse';
 import { BOAT_Y, hullGeometry } from './boat';
@@ -232,6 +232,45 @@ export function createProps(scene: Scene, grassCount: number) {
   sign.rotation.y = Math.PI + 0.35;
   sign.castShadow = true;
   scene.add(sign);
+  // The games podium in the picnic clearing: a stepped wooden lectern with a round top,
+  // the kind you slap a hand down on. Built from boxes and one cylinder so it costs a
+  // handful of triangles and still reads from the island's high camera.
+  const podiumMaterials = ['#d2a86d', '#96693c', '#6b4a2b', '#e0574f'].map((color) => new MeshToonMaterial({ color, gradientMap: toonGradient() }));
+  const [lightWood, midWood, darkWood, trim] = podiumMaterials;
+  const podium = new Group();
+  const podiumParts: Mesh[] = [
+    // Base: two steps, the lower one proud of the upper.
+    new Mesh(new BoxGeometry(1.25, 0.16, 1.05), darkWood),
+    new Mesh(new BoxGeometry(1.05, 0.12, 0.88), midWood),
+    // Column: a light panel between two darker pilasters.
+    new Mesh(new BoxGeometry(0.5, 1.15, 0.46), lightWood),
+    new Mesh(new BoxGeometry(0.16, 1.15, 0.52), darkWood),
+    new Mesh(new BoxGeometry(0.16, 1.15, 0.52), darkWood),
+    // Cornice under the top, then the round top itself and a thin rim under it.
+    new Mesh(new BoxGeometry(1.1, 0.12, 0.92), midWood),
+    new Mesh(new CylinderGeometry(0.72, 0.66, 0.08, 24), darkWood),
+    new Mesh(new CylinderGeometry(0.78, 0.78, 0.13, 24), lightWood),
+    // A coral disc let into the top, where the pieces are played.
+    new Mesh(new CylinderGeometry(0.58, 0.58, 0.02, 24), trim),
+  ];
+  podiumParts[0].position.y = 0.08;
+  podiumParts[1].position.y = 0.22;
+  podiumParts[2].position.y = 0.86;
+  podiumParts[3].position.set(-0.33, 0.86, 0);
+  podiumParts[4].position.set(0.33, 0.86, 0);
+  podiumParts[5].position.y = 1.5;
+  podiumParts[6].position.y = 1.6;
+  podiumParts[7].position.y = 1.71;
+  podiumParts[8].position.y = 1.785;
+  for (const part of podiumParts) {
+    part.castShadow = true;
+    podium.add(part);
+  }
+  podium.position.set(RPS_PODIUM.x, groundHeight(RPS_PODIUM.x, RPS_PODIUM.z), RPS_PODIUM.z);
+  podium.rotation.y = RPS_PODIUM.heading;
+  // Half again as large: at lectern scale it read as a stool from the island's camera.
+  podium.scale.setScalar(1.45);
+  scene.add(podium);
   // Buoys for the boat course, instanced from the modelled asset.
   const buoyPart = propPart('buoy');
   const buoys = new InstancedMesh(buoyPart ? bake(buoyPart, {}) : new SphereGeometry(0.55, 9, 7), vertexColored, BUOYS.length);
@@ -551,6 +590,8 @@ export function createProps(scene: Scene, grassCount: number) {
       (shells.material as MeshToonMaterial).dispose();
       blooms.geometry.dispose();
       (blooms.material as MeshToonMaterial).dispose();
+      for (const part of podiumParts) part.geometry.dispose();
+      for (const material of podiumMaterials) material.dispose();
     },
   };
 }

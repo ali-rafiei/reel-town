@@ -48,6 +48,7 @@ const paths: Record<string, string> = {
   grid: 'M4 4h16v16H4V4Zm5.3 0v16m5.4-16v16M4 9.3h16M4 14.7h16',
   // The harbour cat from the app icon: ears, a wide face and a small smile.
   cat: 'M5 4l4 5h6l4-5 1.5 7L21 15l-4 6H7l-4-6 1.5-4Zm4 9.5h1m5 0h1M10 17q2 1.5 4 0',
+  rps: 'M6 6a3.5 3.5 0 1 0 0 7 3.5 3.5 0 1 0 0-7Zm8-2h6v7h-6V4Zm-1 11 7 6m0-6-7 6',
 };
 const painted: Partial<Record<keyof typeof paths, string>> = {
   fish: 'fish',
@@ -90,6 +91,7 @@ const painted: Partial<Record<keyof typeof paths, string>> = {
   lamp: 'lighthouse-lamp',
   grid: 'grid-dots',
   cat: 'tabby-cat-face',
+  rps: 'rock-paper-scissors',
 };
 export type IconName = keyof typeof paths;
 export function Icon({ name, style, className }: { name: IconName; style?: CSSProperties; className?: string }) {

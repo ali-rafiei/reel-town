@@ -12,6 +12,7 @@ import { CastingContest } from './minigames/casting.js';
 import { BINS } from './minigames/sorting.js';
 import { SERVER_GAMES } from './minigames/registry.js';
 import { FOUR, FourTable } from './minigames/four.js';
+import { RPS, RpsPodium } from './minigames/rps.js';
 import type { SoloRun } from './minigames/solo.js';
 import { GAME_REWARDS, gameReward, isGameId, type GameId } from '../../packages/shared/games.js';
 import { gameRecord, mirrorLegacySorting } from '../../packages/shared/stats.js';
@@ -50,6 +51,7 @@ const contest = new CastingContest();
 // One counter for every game, so a run id never repeats and a stale message cannot match.
 let runCounter = 0;
 const four = new FourTable();
+const rps = new RpsPodium();
 const loopDelay = monitorEventLoopDelay({ resolution: 10 });
 loopDelay.enable();
 const sendRaw = (ws: WebSocket, bytes: Uint8Array) => {
@@ -342,7 +344,7 @@ function handle(p: Player, m: Record<string, any>, now: number) {
         return;
       }
       let onBench = false;
-      if (emote === 'sit' && !p.fishing && !four.isSeated(p.n)) {
+      if (emote === 'sit' && !p.fishing && !four.isSeated(p.n) && !rps.isSeated(p.n)) {
         for (const bench of props.benches)
           if (Math.hypot(p.move.x - bench.x, p.move.z - bench.z) < bench.r + 1.4) {
             onBench = true;
@@ -364,7 +366,7 @@ function handle(p: Player, m: Record<string, any>, now: number) {
     }
     case 'cast': {
       const { power, aim } = parseCast(m);
-      if (p.move.mode === 'boat' || four.isSeated(p.n)) return;
+      if (p.move.mode === 'boat' || four.isSeated(p.n) || rps.isSeated(p.n)) return;
       if (contest.isPlaying(p.n)) {
         // A contest throw only blocks until the rate limit allows the next one.
         if (p.fishing && p.fishing.phase !== 'contest') return;
@@ -420,7 +422,7 @@ function handle(p: Player, m: Record<string, any>, now: number) {
         send(p.ws, { type: 'error', message: 'Reel in first.' });
         return;
       }
-      if (p.run || p.move.mode === 'boat' || four.isSeated(p.n)) return;
+      if (p.run || p.move.mode === 'boat' || four.isSeated(p.n) || rps.isSeated(p.n)) return;
       const refused = contest.join(p.n, p.move.x, p.move.z, now);
       if (refused) send(p.ws, { type: 'error', message: refused });
       else if (contest.participants.size === 1) systemChat(`${p.name} started a casting contest at the end of the pier!`);
@@ -528,6 +530,15 @@ function handle(p: Player, m: Record<string, any>, now: number) {
         if (!four.involves(p.n)) send(p.ws, { type: 'game', game: 'four', event: 'update', runId: 0, view: four.view(p.n) });
         return;
       }
+      if (m.game === 'rps') {
+        if (m.action === 'sit' && (p.fishing || p.run || p.move.mode === 'boat')) return;
+        const refused = rps.handle(p.n, p.name, p.move.x, p.move.z, m.action, m.move, now, p.coins, m.stake, m.length);
+        if (refused) send(p.ws, { type: 'error', message: refused });
+        pushRps(now);
+        // Someone who just left is no longer sent the podium's views, so they get a last one.
+        if (!rps.involves(p.n)) send(p.ws, { type: 'game', game: 'rps', event: 'update', runId: 0, view: rps.view(p.n) });
+        return;
+      }
       const def = SERVER_GAMES[m.game];
       if (!def) return;
       if (m.action === 'start') {
@@ -633,6 +644,10 @@ wss.on('connection', (ws) => {
         four.handle(p.n, p.name, p.move.x, p.move.z, 'leave', undefined, Date.now());
         pushFour(Date.now());
       }
+      if (rps.involves(p.n)) {
+        rps.handle(p.n, p.name, p.move.x, p.move.z, 'leave', undefined, Date.now());
+        pushRps(Date.now());
+      }
       for (const board of boards.release(p.n)) broadcastV2({ type: 'board', board, event: 'lock', n: 0 });
       store.save(p);
       broadcastRoster(undefined, p);
@@ -640,7 +655,7 @@ wss.on('connection', (ws) => {
   });
 });
 function simulate(p: Player, now: number, dt: number) {
-  const held = !!p.fishing || (!!p.run && !!SERVER_GAMES[p.run.game]?.freeze) || four.isSeated(p.n);
+  const held = !!p.fishing || (!!p.run && !!SERVER_GAMES[p.run.game]?.freeze) || four.isSeated(p.n) || rps.isSeated(p.n);
   const before = p.move.vx !== 0 || p.move.vz !== 0;
   if (p.protocol === 2) {
     p.commands.drain(dt, (c) => {
@@ -715,7 +730,7 @@ function simulate(p: Player, now: number, dt: number) {
     }
   }
 }
-const GAME_TITLES: Record<GameId, string> = { sorting: 'sorted the catch', tidepool: 'tidied the tide pools', orchard: 'caught fruit in the orchard', signals: 'read the lighthouse signals', buoy: 'ran the buoys', four: 'won at Dockside Four' };
+const GAME_TITLES: Record<GameId, string> = { sorting: 'sorted the catch', tidepool: 'tidied the tide pools', orchard: 'caught fruit in the orchard', signals: 'read the lighthouse signals', buoy: 'ran the buoys', four: 'won at Dockside Four', rps: 'won at rock paper scissors' };
 // Sends a game event, and the old `sorting` shape alongside for a client that still expects it.
 function sendGame(p: Player, event: 'start' | 'update' | 'end', payload: Record<string, unknown>, run: SoloRun | null = p.run) {
   if (!run) return;
@@ -734,7 +749,7 @@ function startRun(p: Player, game: GameId, now: number) {
     send(p.ws, { type: 'error', message: 'Reel in your line first.' });
     return;
   }
-  if (contest.isPlaying(p.n) || four.isSeated(p.n)) return;
+  if (contest.isPlaying(p.n) || four.isSeated(p.n) || rps.isSeated(p.n)) return;
   // A restart from the water is allowed; anything else must start on foot at the landmark.
   const afloat = p.move.mode === 'boat';
   if (afloat && !def.allowRestart) return;
@@ -786,6 +801,44 @@ function pushFour(now: number) {
     send(p.ws, { type: 'game', game: 'four', event: 'end', runId: 0, score: points, gold, best: record.wins, quit: result.forfeit, outcome: result.outcome, vsAi: result.vsAi, wager: result.wager, wagerPaid: wager });
     send(p.ws, { type: 'inventory', coins: p.coins, inventory: p.inventory, stats: p.stats });
     if (result.outcome === 'win' && !result.vsAi && !result.forfeit) systemChat(result.wager > 0 ? `${p.name} won ${result.wager} gold at Dockside Four!` : `${p.name} won a game of Dockside Four at the picnic table!`);
+  }
+}
+// Everyone at the podium gets a fresh view; finished matches are paid.
+function pushRps(now: number) {
+  for (const p of players.values()) if (rps.involves(p.n)) send(p.ws, { type: 'game', game: 'rps', event: 'update', runId: 0, view: rps.view(p.n) });
+  // Wagers are collected the moment a match starts, so the pot cannot be spent twice.
+  for (const charge of rps.takeCharges()) {
+    const p = byN(charge.n);
+    if (!p) continue;
+    p.coins = Math.max(0, p.coins - charge.amount);
+    store.save(p);
+    if (p.appearance.showGold) broadcastRoster(p);
+    send(p.ws, { type: 'inventory', coins: p.coins, inventory: p.inventory, stats: p.stats });
+  }
+  for (const result of rps.takeResults()) {
+    const p = byN(result.n);
+    if (!p) continue;
+    const record = gameRecord(p.stats, 'rps');
+    record.plays++;
+    if (result.outcome === 'win') record.wins++;
+    const points = result.forfeit ? 0 : result.outcome === 'win' ? RPS.reward.human : result.outcome === 'draw' ? RPS.reward.draw : 0;
+    const gold = gameReward('rps', result.vsAi && result.outcome === 'win' ? RPS.reward.ai : points, record.rewardedAt, now);
+    if (gold > 0) {
+      p.coins += gold;
+      record.rewardedAt.push(now);
+      if (p.appearance.showGold) broadcastRoster(p);
+    }
+    // The wager, settled: the winner takes both stakes, a dead heat hands each theirs
+    // back, and whoever lost — or walked away mid-match — has already paid.
+    const wager = result.wager > 0 ? (result.outcome === 'win' ? result.wager * 2 : result.outcome === 'draw' ? result.wager : 0) : 0;
+    if (wager > 0) {
+      p.coins += wager;
+      if (p.appearance.showGold) broadcastRoster(p);
+    }
+    store.save(p);
+    send(p.ws, { type: 'game', game: 'rps', event: 'end', runId: 0, score: points, gold, best: record.wins, quit: result.forfeit, outcome: result.outcome, vsAi: result.vsAi, wager: result.wager, wagerPaid: wager });
+    send(p.ws, { type: 'inventory', coins: p.coins, inventory: p.inventory, stats: p.stats });
+    if (result.outcome === 'win' && !result.vsAi && !result.forfeit && result.wager > 0) systemChat(`${p.name} won ${result.wager} gold at rock paper scissors!`);
   }
 }
 // Ends a run once: best and plays are recorded, gold is paid under the game's caps, and
@@ -892,6 +945,7 @@ const timer = setInterval(() => {
   const results = contest.update(now, (n) => byN(n)?.stats.casting.rewardedAt || []);
   if (results) settleContest(results, now);
   if (four.tick(now, (n) => byN(n)?.move)) pushFour(now);
+  if (rps.tick(now, (n) => byN(n)?.move)) pushRps(now);
   for (const board of boards.tick(now, (n) => byN(n)?.move)) broadcastV2({ type: 'board', board, event: 'lock', n: 0 });
   for (const gone of boards.maintain(now)) broadcastV2({ type: 'board', board: gone.board, event: 'erase', ids: gone.ids });
   simMs = +(performance.now() - begin).toFixed(3);
@@ -904,7 +958,7 @@ const snapshotTimer = setInterval(() => {
   let shared: Uint8Array | null = null;
   for (const p of players.values()) {
     if (p.protocol === 2) {
-      shared ??= buildSnapshot(players.values(), now, config.cap, players.size, state, contest.state(), [four.snapshot()]);
+      shared ??= buildSnapshot(players.values(), now, config.cap, players.size, state, contest.state(), [four.snapshot(), rps.snapshot()]);
       sendRaw(p.ws, shared);
       sendRaw(p.ws, buildYou(p, now));
     } else sendRaw(p.ws, buildLegacySnapshot(p, players.values(), now, config.cap, players.size, state));
