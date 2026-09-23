@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploys committed source to a new release. Retains previous releases and database.
+# Deploys committed source to a new release. Retains the database and the last 3 releases.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 : "${REELTOWN_SSH_KEY:?Set REELTOWN_SSH_KEY to the private key path}"
@@ -28,11 +28,12 @@ pnpm import
 pnpm install --frozen-lockfile
 pnpm run build
 cd ..
-# The old release remains available; only the current symlink changes.
 ln -s "/opt/reeltown/releases/$release" "/opt/reeltown/current-$release"
 mv -Tf "/opt/reeltown/current-$release" /opt/reeltown/current
 REELTOWN_PUBLIC_HOST="$public_host" bash deploy/server-setup.sh
 sleep 2
 curl --fail --silent http://127.0.0.1:3001/health
+cd /opt/reeltown/releases
+ls -1 | sort | head -n -3 | xargs -r rm -rf --
 REMOTE
 printf '\nServer deployed. Client changes publish through GitHub Pages after a push.\n'
