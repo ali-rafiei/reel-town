@@ -130,7 +130,7 @@ const SPECS: Record<Species, Spec> = {
   bear: { head: [0.68, 0.62, 0.62], torso: { y: 0.72, r: [0.5, 0.42, 0.42] }, hatScale: 1.44, hatY: 0.47, eyes: { x: 0.333, y: 0.093, z: 0.7, r: 0.14, side: 0.659 }, hands: 'fur', feet: 'deep', accent: '#3b2f28' },
   rabbit: { head: [0.62, 0.6, 0.58], torso: { y: 0.72, r: [0.4, 0.4, 0.36] }, hatScale: 1.34, hatY: 0.45, eyes: { x: 0.31, y: 0.039, z: 0.68, r: 0.15, side: 0.606 }, hands: 'fur', feet: 'pale', accent: '#efb0b4' },
   fish: { head: [0.7, 0.62, 0.6], torso: { y: 0.72, r: [0.42, 0.4, 0.37] }, hatScale: 1.46, hatY: 0.45, eyes: { x: 0.477, y: 0.034, z: 0.648, r: 0.17, side: 0.685 }, hands: 'fur', feet: 'deep', accent: '#e07d86' },
-  blob: { head: [0.82, 0.96, 0.7], torso: { y: 0.62, r: [0.62, 0.6, 0.56] }, hatScale: 1.2, hatY: 0.24, eyes: { x: 0.3, y: 0.06, z: 0.54, r: 0.14, side: 0.52 }, hands: 'fur', feet: 'deep', accent: '#a8d1b8' },
+  blob: { head: [0.82, 0.96, 0.7], torso: { y: 0.7, r: [0.82, 0.62, 0.7] }, hatScale: 1.2, hatY: 0.24, eyes: { x: 0.3, y: 0.06, z: 0.54, r: 0.14, side: 0.52 }, hands: 'fur', feet: 'deep', accent: '#a8d1b8' },
 };
 // The colours a species' roles take for one player.
 function paletteFor(a: Appearance, spec: Spec) {
@@ -191,7 +191,7 @@ export function makeAvatar(input: Partial<Appearance>) {
   // A garment worn over a shirt takes the clothing colour, and the shirt and sleeves under
   // it take the player's second colour: in one colour the coat was invisible against the
   // body it covered, and in one fixed cream every layered outfit looked the same.
-  const dressed = kind !== 'blob' && kind !== 'fish';
+  const dressed = kind !== 'fish';
   if (dressed && isLayered(a.outfit)) palette.outfit = a.shirtColor;
   group.add(body);
   body.add(head);
