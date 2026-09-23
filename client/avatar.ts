@@ -191,8 +191,7 @@ export function makeAvatar(input: Partial<Appearance>) {
   // A garment worn over a shirt takes the clothing colour, and the shirt and sleeves under
   // it take the player's second colour: in one colour the coat was invisible against the
   // body it covered, and in one fixed cream every layered outfit looked the same.
-  const dressed = kind !== 'fish';
-  if (dressed && isLayered(a.outfit)) palette.outfit = a.shirtColor;
+  if (isLayered(a.outfit)) palette.outfit = a.shirtColor;
   group.add(body);
   body.add(head);
   head.position.set(0, 1.5, 0);
@@ -268,71 +267,69 @@ export function makeAvatar(input: Partial<Appearance>) {
   const trousers = (geometry: BufferGeometry, colour: string, grow = 1.22) => bodyBatch.add(geometry, colour, 0, hipY, 0, hipR * grow, hipR * grow, hipR * grow);
   // Where a shell's surface is, by polar angle from the top and azimuth from front centre.
   const onTorso = (theta: number, from: number, grow: number): [number, number, number] => [torso.r[0] * grow * Math.sin(from) * Math.sin(theta), torso.y + torso.r[1] * grow * Math.cos(theta), torso.r[2] * grow * Math.cos(from) * Math.sin(theta)];
-  if (dressed) {
-    if (a.outfit === 'raincoat') {
-      // A hooded slicker: the coat over the whole torso, a hood bunched behind the neck,
-      // a storm flap down the front, patch pockets and a darker hem.
-      dress(shell('coat', 0, Math.PI * 0.86), a.outfitColor, 1.09);
-      dress(shell('hem', Math.PI * 0.78, Math.PI * 0.08), trim(outfitDark), 1.1);
-      bodyBatch.add(box, trim(outfitDark), 0, torso.y + 0.02, torso.r[2] * 1.11, 0.1, torso.r[1] * 1.3, 0.04);
-      for (let i = 0; i < 3; i++) bodyBatch.add(small, trim('#f4deb0'), 0, torso.y + 0.2 - i * 0.19, torso.r[2] * 1.11, 0.035);
-      for (const s of [-1, 1]) {
-        const [px, py, pz] = onTorso(Math.PI * 0.62, s * Math.PI * 0.17, 1.11);
-        bodyBatch.add(box, trim(outfitDark), px, py, pz, 0.16, 0.13, 0.03, Math.PI * 0.62 - Math.PI / 2);
-      }
-      bodyBatch.add(template('hood', () => new SphereGeometry(1, 10, 8, 0, Math.PI, 0, Math.PI * 0.7)), a.outfitColor, 0, torso.y + torso.r[1] * 0.74, -torso.r[2] * 0.42, 0.34, 0.3, 0.3, 0.5, Math.PI);
-      bodyBatch.add(template('collar', () => new TorusGeometry(0.3, 0.07, 5, 12)), trim(outfitDark), 0, torso.y + torso.r[1] * 0.8, 0, 1, 1, 1, Math.PI / 2);
-    } else if (a.outfit === 'overalls') {
-      // Denim over a cream shirt: trousers to the waist, a bib on the chest and a strap
-      // over each shoulder to the back, every piece a shell that follows the torso.
-      const denim = a.outfitColor,
-        strap = Math.PI * 0.055,
-        lean = Math.PI * 0.14;
-      trousers(shell('pants', Math.PI * 0.35, Math.PI * 0.65), denim);
-      dress(shell('bib', Math.PI * 0.28, Math.PI * 0.24, Math.PI * 0.34, Math.PI * 0.32), denim, 1.1);
-      for (const s of [-1, 1]) {
-        dress(shell('strap', 0, Math.PI * 0.31, Math.PI * 0.5 + s * lean - strap, strap * 2), denim, 1.1);
-        dress(shell('strap', 0, Math.PI * 0.46, Math.PI * 1.5 - s * lean - strap, strap * 2), denim, 1.1);
-        const [bx, by, bz] = onTorso(Math.PI * 0.3, s * lean, 1.13);
-        bodyBatch.add(small, trim('#e8c369'), bx, by, bz, 0.035);
-      }
-      // A patch pocket on the bib and a hem band where the denim meets the shirt.
-      const [px, py, pz] = onTorso(Math.PI * 0.41, 0, 1.11);
-      bodyBatch.add(box, trim(outfitDark), px, py, pz, 0.17, 0.14, 0.03, Math.PI * 0.41 - Math.PI / 2);
-      bodyBatch.add(template('waistband', () => new TorusGeometry(1, 0.13, 5, 16)), trim(outfitDark), 0, hipY + hipR * 0.5, 0, hipR * 1.16, hipR * 1.16, 0.7, Math.PI / 2);
-    } else if (a.outfit === 'hoodie') {
-      // A pullover with a hood down the back, a kangaroo pocket and drawstrings.
-      dress(shell('hoodie', 0, Math.PI * 0.74), a.outfitColor, 1.09);
-      dress(shell('cuff', Math.PI * 0.68, Math.PI * 0.07), trim(outfitDark), 1.1);
-      bodyBatch.add(template('hoodback', () => new SphereGeometry(1, 10, 8, 0, Math.PI, 0, Math.PI * 0.68)), a.outfitColor, 0, torso.y + torso.r[1] * 0.72, -torso.r[2] * 0.5, 0.36, 0.32, 0.32, 0.65, Math.PI);
-      bodyBatch.add(template('hoodrim', () => new TorusGeometry(1, 0.13, 5, 12)), trim(outfitDark), 0, torso.y + torso.r[1] * 0.86, -torso.r[2] * 0.18, 0.34, 0.3, 0.34, Math.PI * 0.42);
-      // A kangaroo pocket across the belly: a shell patch, so it follows the body.
-      dress(shell('pouch', Math.PI * 0.46, Math.PI * 0.2, Math.PI * 0.26, Math.PI * 0.48), trim(outfitDark), 1.105);
-      for (const s of [-1, 1]) {
-        const [dx, dy, dz] = onTorso(Math.PI * 0.32, s * Math.PI * 0.05, 1.12);
-        bodyBatch.add(box, trim(palette.cream), dx, dy, dz, 0.035, 0.26, 0.035);
-        bodyBatch.add(small, trim('#e8c369'), dx, dy - 0.14, dz, 0.03);
-      }
+  if (a.outfit === 'raincoat') {
+    // A hooded slicker: the coat over the whole torso, a hood bunched behind the neck,
+    // a storm flap down the front, patch pockets and a darker hem.
+    dress(shell('coat', 0, Math.PI * 0.86), a.outfitColor, 1.22);
+    dress(shell('hem', Math.PI * 0.78, Math.PI * 0.08), trim(outfitDark), 1.24);
+    bodyBatch.add(box, trim(outfitDark), 0, torso.y + 0.02, torso.r[2] * 1.25, 0.1, torso.r[1] * 1.3, 0.04);
+    for (let i = 0; i < 3; i++) bodyBatch.add(small, trim('#f4deb0'), 0, torso.y + 0.2 - i * 0.19, torso.r[2] * 1.25, 0.035);
+    for (const s of [-1, 1]) {
+      const [px, py, pz] = onTorso(Math.PI * 0.62, s * Math.PI * 0.17, 1.25);
+      bodyBatch.add(box, trim(outfitDark), px, py, pz, 0.16, 0.13, 0.03, Math.PI * 0.62 - Math.PI / 2);
     }
-    if (a.outfit === 'striped') for (const t of [0.3, 0.44]) dress(shell('band', Math.PI * t, Math.PI * 0.07), trim('#f5e4c4'), 1.075);
-    if (a.outfit === 'cardigan') {
-      // The cardigan itself is the clothing colour, over a shirt of its own; the placket
-      // and its buttons are trim.
-      for (const phi of [0.1, 0.6]) dress(shell('lapel', 0, Math.PI * 0.62, Math.PI * phi, Math.PI * 0.3), a.outfitColor, 1.075);
-      dress(shell('back', 0, Math.PI * 0.62, Math.PI * 1.08, Math.PI * 0.84), a.outfitColor, 1.075);
-      bodyBatch.add(box, trim('#f2e3c7'), 0, torso.y, torso.r[2] * 1.06, 0.14, 0.58, 0.06);
-      for (let i = 0; i < 3; i++) bodyBatch.add(small, trim('#8c6a3f'), 0.08, torso.y + 0.18 - i * 0.17, torso.r[2] * 1.1, 0.03);
+    bodyBatch.add(template('hood', () => new SphereGeometry(1, 10, 8, 0, Math.PI, 0, Math.PI * 0.7)), a.outfitColor, 0, torso.y + torso.r[1] * 0.74, -torso.r[2] * 0.42, 0.34, 0.3, 0.3, 0.5, Math.PI);
+    bodyBatch.add(template('collar', () => new TorusGeometry(0.3, 0.07, 5, 12)), trim(outfitDark), 0, torso.y + torso.r[1] * 0.8, 0, 1, 1, 1, Math.PI / 2);
+  } else if (a.outfit === 'overalls') {
+    // Denim over a cream shirt: trousers to the waist, a bib on the chest and a strap
+    // over each shoulder to the back, every piece a shell that follows the torso.
+    const denim = a.outfitColor,
+      strap = Math.PI * 0.055,
+      lean = Math.PI * 0.14;
+    trousers(shell('pants', Math.PI * 0.35, Math.PI * 0.65), denim);
+    dress(shell('bib', Math.PI * 0.28, Math.PI * 0.24, Math.PI * 0.34, Math.PI * 0.32), denim, 1.22);
+    for (const s of [-1, 1]) {
+      dress(shell('strap', 0, Math.PI * 0.31, Math.PI * 0.5 + s * lean - strap, strap * 2), denim, 1.22);
+      dress(shell('strap', 0, Math.PI * 0.46, Math.PI * 1.5 - s * lean - strap, strap * 2), denim, 1.22);
+      const [bx, by, bz] = onTorso(Math.PI * 0.3, s * lean, 1.25);
+      bodyBatch.add(small, trim('#e8c369'), bx, by, bz, 0.035);
     }
-    if (a.outfit === 'sweater') {
-      for (let i = 0; i < 6; i++) bodyBatch.add(box, trim('#f5e4c4'), -0.21 + i * 0.085, torso.y + 0.06, torso.r[2] * 1.07, 0.11, 0.04, 0.03, 0, 0, i % 2 ? -0.7 : 0.7);
-      bodyBatch.add(template('collar', () => new TorusGeometry(0.3, 0.06, 5, 12)), trim(outfitDark), 0, torso.y + torso.r[1] * 0.78, 0, 1, 1, 1, Math.PI / 2);
+    // A patch pocket on the bib and a hem band where the denim meets the shirt.
+    const [px, py, pz] = onTorso(Math.PI * 0.41, 0, 1.23);
+    bodyBatch.add(box, trim(outfitDark), px, py, pz, 0.17, 0.14, 0.03, Math.PI * 0.41 - Math.PI / 2);
+    bodyBatch.add(template('waistband', () => new TorusGeometry(1, 0.13, 5, 16)), trim(outfitDark), 0, hipY + hipR * 0.5, 0, hipR * 1.16, hipR * 1.16, 0.7, Math.PI / 2);
+  } else if (a.outfit === 'hoodie') {
+    // A pullover with a hood down the back, a kangaroo pocket and drawstrings.
+    dress(shell('hoodie', 0, Math.PI * 0.74), a.outfitColor, 1.22);
+    dress(shell('cuff', Math.PI * 0.68, Math.PI * 0.07), trim(outfitDark), 1.23);
+    bodyBatch.add(template('hoodback', () => new SphereGeometry(1, 10, 8, 0, Math.PI, 0, Math.PI * 0.68)), a.outfitColor, 0, torso.y + torso.r[1] * 0.72, -torso.r[2] * 0.5, 0.36, 0.32, 0.32, 0.65, Math.PI);
+    bodyBatch.add(template('hoodrim', () => new TorusGeometry(1, 0.13, 5, 12)), trim(outfitDark), 0, torso.y + torso.r[1] * 0.86, -torso.r[2] * 0.18, 0.34, 0.3, 0.34, Math.PI * 0.42);
+    // A kangaroo pocket across the belly: a shell patch, so it follows the body.
+    dress(shell('pouch', Math.PI * 0.46, Math.PI * 0.2, Math.PI * 0.26, Math.PI * 0.48), trim(outfitDark), 1.235);
+    for (const s of [-1, 1]) {
+      const [dx, dy, dz] = onTorso(Math.PI * 0.32, s * Math.PI * 0.05, 1.24);
+      bodyBatch.add(box, trim(palette.cream), dx, dy, dz, 0.035, 0.26, 0.035);
+      bodyBatch.add(small, trim('#e8c369'), dx, dy - 0.14, dz, 0.03);
     }
-    if (a.outfit === 'vest') {
-      // The vest is the clothing colour over a shirt of its own, its pockets the trim.
-      for (const phi of [0.08, 0.58]) dress(shell('vest', 0, Math.PI * 0.66, Math.PI * phi, Math.PI * 0.34), a.outfitColor, 1.08);
-      dress(shell('vest', 0, Math.PI * 0.66, Math.PI * 1.08, Math.PI * 0.84), a.outfitColor, 1.08);
-      for (const s of [-1, 1]) bodyBatch.add(box, trim(outfitDark), s * 0.2, torso.y - 0.08, torso.r[2] * 1.06, 0.14, 0.07, 0.03);
-    }
+  }
+  if (a.outfit === 'striped') for (const t of [0.3, 0.44]) dress(shell('band', Math.PI * t, Math.PI * 0.07), trim('#f5e4c4'), 1.115);
+  if (a.outfit === 'cardigan') {
+    // The cardigan itself is the clothing colour, over a shirt of its own; the placket
+    // and its buttons are trim.
+    for (const phi of [0.1, 0.6]) dress(shell('lapel', 0, Math.PI * 0.62, Math.PI * phi, Math.PI * 0.3), a.outfitColor, 1.18);
+    dress(shell('back', 0, Math.PI * 0.62, Math.PI * 1.08, Math.PI * 0.84), a.outfitColor, 1.18);
+    bodyBatch.add(box, trim('#f2e3c7'), 0, torso.y, torso.r[2] * 1.17, 0.14, 0.58, 0.06);
+    for (let i = 0; i < 3; i++) bodyBatch.add(small, trim('#8c6a3f'), 0.08, torso.y + 0.18 - i * 0.17, torso.r[2] * 1.21, 0.03);
+  }
+  if (a.outfit === 'sweater') {
+    for (let i = 0; i < 6; i++) bodyBatch.add(box, trim('#f5e4c4'), -0.21 + i * 0.085, torso.y + 0.06, torso.r[2] * 1.11, 0.11, 0.04, 0.03, 0, 0, i % 2 ? -0.7 : 0.7);
+    bodyBatch.add(template('collar', () => new TorusGeometry(0.3, 0.06, 5, 12)), trim(outfitDark), 0, torso.y + torso.r[1] * 0.78, 0, 1, 1, 1, Math.PI / 2);
+  }
+  if (a.outfit === 'vest') {
+    // The vest is the clothing colour over a shirt of its own, its pockets the trim.
+    for (const phi of [0.08, 0.58]) dress(shell('vest', 0, Math.PI * 0.66, Math.PI * phi, Math.PI * 0.34), a.outfitColor, 1.19);
+    dress(shell('vest', 0, Math.PI * 0.66, Math.PI * 1.08, Math.PI * 0.84), a.outfitColor, 1.19);
+    for (const s of [-1, 1]) bodyBatch.add(box, trim(outfitDark), s * 0.2, torso.y - 0.08, torso.r[2] * 1.17, 0.14, 0.07, 0.03);
   }
   // A hat of plain cloth takes the hat colour rather than the clothing one; the hats that
   // are a thing before they are a hat carry their own colours and never look this up.
