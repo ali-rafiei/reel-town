@@ -287,7 +287,7 @@ def bird():
     role(body, 'outfit', lambda x, y, z: y > 0.56)
     bisect(body, y=0.56)
     role(body, 'outfit', lambda x, y, z: y > 0.56)
-    role(body, 'pale', lambda x, y, z: z > 0.2 and y > 0.5 and abs(x) < 0.3)
+    role(body, 'pale', lambda x, y, z: z > 0.2 and y > 0.5)
     bits = [body]
     for i in range(6):
         bits.append(role(box('zig', -0.21 + i * 0.085, 0.82, 0.38 * 1.02, 0.11, 0.035, 0.03, rz=(-0.7 if i % 2 else 0.7)), 'accent'))
